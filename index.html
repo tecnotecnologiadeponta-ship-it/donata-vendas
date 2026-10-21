@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard de Vendas Diárias</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-card: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-gold: #fbbf24;
+    }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .header {
+      margin-bottom: 24px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    .header p {
+      margin: 4px 0 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background-color: var(--bg-card);
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+    }
+    .card span {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .card h2 {
+      margin: 8px 0 0;
+      font-size: 1.6rem;
+    }
+    .chart-wrapper {
+      position: relative;
+      height: 420px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Desempenho Comercial: Vendas vs. Meta</h1>
+      <p id="status">Sincronizando dados com Google Sheets...</p>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="card">
+        <span>Total de Vendas</span>
+        <h2 id="kpi-vendas" style="color: var(--accent-blue)">R$ 0,00</h2>
+      </div>
+      <div class="card">
+        <span>Meta Acumulada</span>
+        <h2 id="kpi-meta" style="color: var(--accent-gold)">R$ 0,00</h2>
+      </div>
+      <div class="card">
+        <span>Atingimento da Meta</span>
+        <h2 id="kpi-atingimento">0%</h2>
+      </div>
+    </div>
+
+    <div class="card chart-wrapper">
+      <canvas id="graficoVendas"></canvas>
+    </div>
+  </div>
+
+  <script>
+    // COLE AQUI A URL DO SEU GOOGLE APPS SCRIPT
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwENPPDpgKPLfc_UZqV19b-QW4Ay3ZGuHrWz_O3IcIopcnXL7ZoGxq97DPGFL4p37HYrQ/exec';
+
+    const formatarMoeda = (valor) => 
+      valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+    async function carregarDashboard() {
+      try {
+        const response = await fetch(API_URL);
+        const dados = await response.json();
+
+        const datas = dados.map(item => item.data);
+        const vendas = dados.map(item => item.vendas);
+        const metas = dados.map(item => item.meta);
+
+        const totalVendas = vendas.reduce((acc, val) => acc + val, 0);
+        const totalMeta = metas.reduce((acc, val) => acc + val, 0);
+        const percentual = totalMeta > 0 ? ((totalVendas / totalMeta) * 100).toFixed(1) : 0;
+
+        document.getElementById('kpi-vendas').innerText = formatarMoeda(totalVendas);
+        document.getElementById('kpi-meta').innerText = formatarMoeda(totalMeta);
+        document.getElementById('kpi-atingimento').innerText = `${percentual}%`;
+        document.getElementById('status').innerText = 'Dados atualizados em tempo real.';
+
+        const ctx = document.getElementById('graficoVendas').getContext('2d');
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: datas,
+            datasets: [
+              {
+                label: 'Vendas Realizadas (R$)',
+                data: vendas,
+                backgroundColor: '#38bdf8',
+                borderRadius: 6
+              },
+              {
+                label: 'Meta do Dia (R$)',
+                data: metas,
+                backgroundColor: '#fbbf24',
+                borderRadius: 6
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                labels: { color: '#f8fafc' }
+              }
+            },
+            scales: {
+              x: {
+                ticks: { color: '#94a3b8' },
+                grid: { display: false }
+              },
+              y: {
+                beginAtZero: true,
+                ticks: { color: '#94a3b8' },
+                grid: { color: '#334155' }
+              }
+            }
+          }
+        });
+      } catch (erro) {
+        document.getElementById('status').innerText = 'Erro ao carregar os dados da API.';
+        console.error('Falha na requisição:', erro);
+      }
+    }
+
+    carregarDashboard();
+  </script>
+</body>
+</html>
