@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard de Vendas Diárias & Meta Mensal</title>
+  <title>Dashboard Comercial & Atendimento</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -15,6 +15,7 @@
       --accent-gold: #fbbf24;
       --accent-green: #34d399;
       --accent-rose: #f43f5e;
+      --accent-purple: #a855f7;
     }
     body {
       margin: 0;
@@ -24,7 +25,7 @@
       color: var(--text-main);
     }
     .container {
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
     }
     .header {
@@ -61,9 +62,25 @@
       margin: 8px 0 0;
       font-size: 1.45rem;
     }
+    .card small {
+      display: block;
+      margin-top: 4px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 900px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
     .chart-wrapper {
       position: relative;
-      height: 480px;
+      height: 460px;
     }
   </style>
 </head>
@@ -71,39 +88,56 @@
 
   <div class="container">
     <div class="header">
-      <h1>Desempenho Comercial: Ciclo Mensal R$ 500.000,00</h1>
+      <h1>Desempenho Comercial & Mix de Clientes</h1>
       <p id="status">Sincronizando dados com Google Sheets...</p>
     </div>
 
-    <!-- Grade de Indicadores (KPIs) -->
+    <!-- Indicadores Principais -->
     <div class="kpi-grid">
       <div class="card">
         <span>Vendido no Ciclo</span>
         <h2 id="kpi-vendas" style="color: var(--accent-blue)">R$ 0,00</h2>
       </div>
       <div class="card">
-        <span>Meta do Ciclo</span>
-        <h2 style="color: var(--accent-gold)">R$ 500.000,00</h2>
-      </div>
-      <div class="card">
-        <span>Falta para Meta</span>
+        <span>Falta p/ Meta (500k)</span>
         <h2 id="kpi-falta" style="color: var(--accent-rose)">R$ 0,00</h2>
+        <small id="kpi-progresso">0% atingido</small>
       </div>
       <div class="card">
-        <span>Progresso Geral</span>
-        <h2 id="kpi-progresso" style="color: var(--accent-green)">0%</h2>
+        <span>Total de Clientes</span>
+        <h2 id="kpi-total-clientes" style="color: var(--text-main)">0</h2>
+        <small>Atendimentos somados</small>
+      </div>
+      <div class="card">
+        <span>Clientes PJ</span>
+        <h2 id="kpi-pj" style="color: var(--accent-gold)">0</h2>
+        <small id="kpi-pj-pct">0% do total</small>
+      </div>
+      <div class="card">
+        <span>Clientes PF</span>
+        <h2 id="kpi-pf" style="color: var(--accent-purple)">0</h2>
+        <small id="kpi-pf-pct">0% do total</small>
       </div>
     </div>
 
-    <!-- Gráfico Híbrido: Barras Diárias + Linha de Andamento Acumulado -->
-    <div class="card chart-wrapper">
-      <canvas id="graficoVendas"></canvas>
+    <!-- Gráficos -->
+    <div class="charts-grid">
+      <!-- Gráfico de Vendas e Meta -->
+      <div class="card chart-wrapper">
+        <canvas id="graficoVendas"></canvas>
+      </div>
+      <!-- Gráfico de Rosca de Clientes PJ vs PF -->
+      <div class="card chart-wrapper">
+        <h3 style="margin: 0 0 16px 0; font-size: 1rem; color: var(--text-muted); text-align: center;">Divisão de Clientes (PJ vs PF)</h3>
+        <canvas id="graficoClientes"></canvas>
+      </div>
     </div>
   </div>
 
   <script>
-    // Cole aqui a URL gerada no seu Apps Script (/exec)
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwENPPDpgKPLfc_UZqV19b-QW4Ay3ZGuHrWz_O3IcIopcnXL7ZoGxq97DPGFL4p37HYrQ/exec';
+    // Cole aqui a sua URL do Apps Script (/exec)
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwENPPDpgKPLfc_UZqV19b-QW4Ay3ZGuHrWz_O3IcIopcnXL7ZoGxq97DPGFL4p37HYrQ/exec
+';
     const META_CICLO = 500000.00;
 
     const formatarMoeda = (valor) => 
@@ -117,27 +151,44 @@
         const datas = dados.map(item => item.data);
         const vendas = dados.map(item => item.vendas);
         const metasDiarias = dados.map(item => item.meta);
+        const pj = dados.map(item => item.pj);
+        const pf = dados.map(item => item.pf);
 
-        // Calcula a curva acumulada dia após dia
-        let soma = 0;
+        // Cálculos Financeiros
+        let somaVendas = 0;
         const vendasAcumuladas = vendas.map(v => {
-          soma += v;
-          return Number(soma.toFixed(2));
+          somaVendas += v;
+          return Number(somaVendas.toFixed(2));
         });
 
-        const totalVendido = soma;
+        const totalVendido = somaVendas;
         const valorRestante = Math.max(0, META_CICLO - totalVendido);
         const percentualAtingido = ((totalVendido / META_CICLO) * 100).toFixed(1);
 
-        // Atualização dos cards
+        // Cálculos de Clientes
+        const totalPJ = pj.reduce((acc, v) => acc + v, 0);
+        const totalPF = pf.reduce((acc, v) => acc + v, 0);
+        const totalClientes = totalPJ + totalPF;
+
+        const pctPJ = totalClientes > 0 ? ((totalPJ / totalClientes) * 100).toFixed(1) : 0;
+        const pctPF = totalClientes > 0 ? ((totalPF / totalClientes) * 100).toFixed(1) : 0;
+
+        // Atualização dos Cards
         document.getElementById('kpi-vendas').innerText = formatarMoeda(totalVendido);
         document.getElementById('kpi-falta').innerText = formatarMoeda(valorRestante);
-        document.getElementById('kpi-progresso').innerText = `${percentualAtingido}%`;
+        document.getElementById('kpi-progresso').innerText = `${percentualAtingido}% atingido`;
+        
+        document.getElementById('kpi-total-clientes').innerText = totalClientes.toLocaleString('pt-BR');
+        document.getElementById('kpi-pj').innerText = totalPJ.toLocaleString('pt-BR');
+        document.getElementById('kpi-pj-pct').innerText = `${pctPJ}% do total`;
+        document.getElementById('kpi-pf').innerText = totalPF.toLocaleString('pt-BR');
+        document.getElementById('kpi-pf-pct').innerText = `${pctPF}% do total`;
+
         document.getElementById('status').innerText = 'Dados atualizados em tempo real.';
 
-        // Criação do Gráfico Misto (Dois eixos Y: Esquerdo para o dia / Direito para o acumulado)
-        const ctx = document.getElementById('graficoVendas').getContext('2d');
-        new Chart(ctx, {
+        // 1. Gráfico Misto (Barras + Linha Acumulada)
+        const ctxVendas = document.getElementById('graficoVendas').getContext('2d');
+        new Chart(ctxVendas, {
           data: {
             labels: datas,
             datasets: [
@@ -170,7 +221,7 @@
               },
               {
                 type: 'line',
-                label: 'Teto Meta R$ 500k',
+                label: 'Teto R$ 500k',
                 data: Array(datas.length).fill(META_CICLO),
                 borderColor: '#f43f5e',
                 borderDash: [6, 6],
@@ -184,33 +235,12 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: {
-              mode: 'index',
-              intersect: false
-            },
+            interaction: { mode: 'index', intersect: false },
             plugins: {
-              legend: {
-                labels: { color: '#f8fafc', font: { size: 12 } }
-              },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    let label = context.dataset.label || '';
-                    if (label) label += ': ';
-                    if (context.parsed.y !== null) {
-                      label += formatarMoeda(context.parsed.y);
-                    }
-                    return label;
-                  }
-                }
-              }
+              legend: { labels: { color: '#f8fafc', font: { size: 11 } } }
             },
             scales: {
-              x: {
-                ticks: { color: '#94a3b8' },
-                grid: { display: false }
-              },
-              // Eixo Y Esquerdo: valores diários (até ~25k)
+              x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
               y: {
                 type: 'linear',
                 position: 'left',
@@ -221,7 +251,6 @@
                 },
                 grid: { color: '#334155' }
               },
-              // Eixo Y Direito: valores acumulados (0 até 500k+)
               yAcumulado: {
                 type: 'linear',
                 position: 'right',
@@ -231,11 +260,47 @@
                   color: '#34d399',
                   callback: (value) => 'R$ ' + (value / 1000) + 'k'
                 },
-                grid: { display: false } // oculta linhas para não poluir
+                grid: { display: false }
               }
             }
           }
         });
+
+        // 2. Gráfico de Rosca (PJ vs PF)
+        const ctxClientes = document.getElementById('graficoClientes').getContext('2d');
+        new Chart(ctxClientes, {
+          type: 'doughnut',
+          data: {
+            labels: ['Pessoa Jurídica (PJ)', 'Pessoa Física (PF)'],
+            datasets: [{
+              data: [totalPJ, totalPF],
+              backgroundColor: ['#fbbf24', '#a855f7'],
+              borderWidth: 0,
+              hoverOffset: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: { color: '#f8fafc', padding: 20 }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const valor = context.parsed;
+                    const pct = totalClientes > 0 ? ((valor / totalClientes) * 100).toFixed(1) : 0;
+                    return ` ${context.label}: ${valor.toLocaleString('pt-BR')} (${pct}%)`;
+                  }
+                }
+              }
+            },
+            cutout: '70%'
+          }
+        });
+
       } catch (erro) {
         document.getElementById('status').innerText = 'Erro ao carregar os dados da API.';
         console.error('Falha:', erro);
