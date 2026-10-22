@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard de Vendas Diárias</title>
+  <title>Dashboard de Vendas Diárias & Meta Mensal</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     :root {
@@ -13,6 +13,8 @@
       --text-muted: #94a3b8;
       --accent-blue: #38bdf8;
       --accent-gold: #fbbf24;
+      --accent-green: #34d399;
+      --accent-rose: #f43f5e;
     }
     body {
       margin: 0;
@@ -22,7 +24,7 @@
       color: var(--text-main);
     }
     .container {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: 0 auto;
     }
     .header {
@@ -39,27 +41,29 @@
     }
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
     .card {
       background-color: var(--bg-card);
-      padding: 20px;
+      padding: 18px;
       border-radius: 12px;
       border: 1px solid #334155;
     }
     .card span {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     .card h2 {
       margin: 8px 0 0;
-      font-size: 1.6rem;
+      font-size: 1.45rem;
     }
     .chart-wrapper {
       position: relative;
-      height: 420px;
+      height: 480px;
     }
   </style>
 </head>
@@ -67,33 +71,40 @@
 
   <div class="container">
     <div class="header">
-      <h1>Desempenho Comercial: Vendas vs. Meta</h1>
+      <h1>Desempenho Comercial: Ciclo Mensal R$ 500.000,00</h1>
       <p id="status">Sincronizando dados com Google Sheets...</p>
     </div>
 
+    <!-- Grade de Indicadores (KPIs) -->
     <div class="kpi-grid">
       <div class="card">
-        <span>Total de Vendas</span>
+        <span>Vendido no Ciclo</span>
         <h2 id="kpi-vendas" style="color: var(--accent-blue)">R$ 0,00</h2>
       </div>
       <div class="card">
-        <span>Meta Acumulada</span>
-        <h2 id="kpi-meta" style="color: var(--accent-gold)">R$ 0,00</h2>
+        <span>Meta do Ciclo</span>
+        <h2 style="color: var(--accent-gold)">R$ 500.000,00</h2>
       </div>
       <div class="card">
-        <span>Atingimento da Meta</span>
-        <h2 id="kpi-atingimento">0%</h2>
+        <span>Falta para Meta</span>
+        <h2 id="kpi-falta" style="color: var(--accent-rose)">R$ 0,00</h2>
+      </div>
+      <div class="card">
+        <span>Progresso Geral</span>
+        <h2 id="kpi-progresso" style="color: var(--accent-green)">0%</h2>
       </div>
     </div>
 
+    <!-- Gráfico Híbrido: Barras Diárias + Linha de Andamento Acumulado -->
     <div class="card chart-wrapper">
       <canvas id="graficoVendas"></canvas>
     </div>
   </div>
 
   <script>
-    // COLE AQUI A URL DO SEU GOOGLE APPS SCRIPT
+    // Cole aqui a URL gerada no seu Apps Script (/exec)
     const API_URL = 'https://script.google.com/macros/s/AKfycbwENPPDpgKPLfc_UZqV19b-QW4Ay3ZGuHrWz_O3IcIopcnXL7ZoGxq97DPGFL4p37HYrQ/exec';
+    const META_CICLO = 500000.00;
 
     const formatarMoeda = (valor) => 
       valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -105,43 +116,93 @@
 
         const datas = dados.map(item => item.data);
         const vendas = dados.map(item => item.vendas);
-        const metas = dados.map(item => item.meta);
+        const metasDiarias = dados.map(item => item.meta);
 
-        const totalVendas = vendas.reduce((acc, val) => acc + val, 0);
-        const totalMeta = metas.reduce((acc, val) => acc + val, 0);
-        const percentual = totalMeta > 0 ? ((totalVendas / totalMeta) * 100).toFixed(1) : 0;
+        // Calcula a curva acumulada dia após dia
+        let soma = 0;
+        const vendasAcumuladas = vendas.map(v => {
+          soma += v;
+          return Number(soma.toFixed(2));
+        });
 
-        document.getElementById('kpi-vendas').innerText = formatarMoeda(totalVendas);
-        document.getElementById('kpi-meta').innerText = formatarMoeda(totalMeta);
-        document.getElementById('kpi-atingimento').innerText = `${percentual}%`;
+        const totalVendido = soma;
+        const valorRestante = Math.max(0, META_CICLO - totalVendido);
+        const percentualAtingido = ((totalVendido / META_CICLO) * 100).toFixed(1);
+
+        // Atualização dos cards
+        document.getElementById('kpi-vendas').innerText = formatarMoeda(totalVendido);
+        document.getElementById('kpi-falta').innerText = formatarMoeda(valorRestante);
+        document.getElementById('kpi-progresso').innerText = `${percentualAtingido}%`;
         document.getElementById('status').innerText = 'Dados atualizados em tempo real.';
 
+        // Criação do Gráfico Misto (Dois eixos Y: Esquerdo para o dia / Direito para o acumulado)
         const ctx = document.getElementById('graficoVendas').getContext('2d');
         new Chart(ctx, {
-          type: 'bar',
           data: {
             labels: datas,
             datasets: [
               {
-                label: 'Vendas Realizadas (R$)',
+                type: 'bar',
+                label: 'Vendas do Dia (R$)',
                 data: vendas,
                 backgroundColor: '#38bdf8',
-                borderRadius: 6
+                borderRadius: 4,
+                yAxisID: 'y'
               },
               {
+                type: 'bar',
                 label: 'Meta do Dia (R$)',
-                data: metas,
+                data: metasDiarias,
                 backgroundColor: '#fbbf24',
-                borderRadius: 6
+                borderRadius: 4,
+                yAxisID: 'y'
+              },
+              {
+                type: 'line',
+                label: 'Acumulado no Ciclo (R$)',
+                data: vendasAcumuladas,
+                borderColor: '#34d399',
+                backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                borderWidth: 3,
+                tension: 0.25,
+                fill: false,
+                yAxisID: 'yAcumulado'
+              },
+              {
+                type: 'line',
+                label: 'Teto Meta R$ 500k',
+                data: Array(datas.length).fill(META_CICLO),
+                borderColor: '#f43f5e',
+                borderDash: [6, 6],
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false,
+                yAxisID: 'yAcumulado'
               }
             ]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
             plugins: {
               legend: {
-                labels: { color: '#f8fafc' }
+                labels: { color: '#f8fafc', font: { size: 12 } }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    let label = context.dataset.label || '';
+                    if (label) label += ': ';
+                    if (context.parsed.y !== null) {
+                      label += formatarMoeda(context.parsed.y);
+                    }
+                    return label;
+                  }
+                }
               }
             },
             scales: {
@@ -149,17 +210,35 @@
                 ticks: { color: '#94a3b8' },
                 grid: { display: false }
               },
+              // Eixo Y Esquerdo: valores diários (até ~25k)
               y: {
+                type: 'linear',
+                position: 'left',
                 beginAtZero: true,
-                ticks: { color: '#94a3b8' },
+                ticks: {
+                  color: '#94a3b8',
+                  callback: (value) => 'R$ ' + (value / 1000) + 'k'
+                },
                 grid: { color: '#334155' }
+              },
+              // Eixo Y Direito: valores acumulados (0 até 500k+)
+              yAcumulado: {
+                type: 'linear',
+                position: 'right',
+                beginAtZero: true,
+                suggestedMax: 520000,
+                ticks: {
+                  color: '#34d399',
+                  callback: (value) => 'R$ ' + (value / 1000) + 'k'
+                },
+                grid: { display: false } // oculta linhas para não poluir
               }
             }
           }
         });
       } catch (erro) {
         document.getElementById('status').innerText = 'Erro ao carregar os dados da API.';
-        console.error('Falha na requisição:', erro);
+        console.error('Falha:', erro);
       }
     }
 
