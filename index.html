@@ -3,135 +3,300 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Comercial & Atendimento</title>
+  <title>Donata Limpeza - Painel Comercial</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-primary: #0f172a;
-      --bg-card: #1e293b;
-      --text-main: #f8fafc;
+      --bg-dark: #0a0f1d;
+      --bg-card: #121929;
+      --bg-card-hover: #162033;
+      --border-card: #1e293b;
+      --donata-green: #10b981;
+      --donata-green-glow: rgba(16, 185, 129, 0.25);
+      --donata-cyan: #06b6d4;
+      --donata-cyan-glow: rgba(6, 182, 212, 0.25);
+      --donata-amber: #f59e0b;
+      --donata-purple: #a855f7;
+      --donata-rose: #f43f5e;
+      --text-title: #f8fafc;
       --text-muted: #94a3b8;
-      --accent-blue: #38bdf8;
-      --accent-gold: #fbbf24;
-      --accent-green: #34d399;
-      --accent-rose: #f43f5e;
-      --accent-purple: #a855f7;
     }
-    body {
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 24px;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: var(--bg-primary);
-      color: var(--text-main);
+      padding: 0;
     }
+
+    body {
+      padding: 28px 20px;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      background: radial-gradient(circle at top right, #0d1e33 0%, var(--bg-dark) 55%);
+      color: var(--text-title);
+      min-height: 100vh;
+    }
+
     .container {
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
     }
-    .header {
-      margin-bottom: 24px;
+
+    /* Cabeçalho Donata */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid #1e293b;
     }
-    .header h1 {
-      margin: 0;
-      font-size: 1.5rem;
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .header p {
-      margin: 4px 0 0;
+
+    .brand-badge {
+      background: linear-gradient(135deg, #10b981, #06b6d4);
+      color: #000;
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 8px 14px;
+      border-radius: 10px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 4px 15px var(--donata-green-glow);
+    }
+
+    .header-text h1 {
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+    }
+
+    .header-text p {
+      font-size: 0.88rem;
       color: var(--text-muted);
-      font-size: 0.9rem;
+      margin-top: 3px;
     }
+
+    .live-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #34d399;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Grade de KPIs */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 16px;
       margin-bottom: 24px;
     }
-    .card {
-      background-color: var(--bg-card);
-      padding: 18px;
-      border-radius: 12px;
-      border: 1px solid #334155;
+
+    .kpi-card {
+      background: linear-gradient(180deg, rgba(22, 32, 51, 0.9) 0%, rgba(18, 25, 41, 0.95) 100%);
+      padding: 20px 22px;
+      border-radius: 16px;
+      border: 1px solid var(--border-card);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s ease, border-color 0.2s ease;
     }
-    .card span {
-      font-size: 0.8rem;
+
+    .kpi-card:hover {
+      transform: translateY(-2px);
+      border-color: #334155;
+    }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--card-color, #10b981);
+    }
+
+    .kpi-card span {
+      font-size: 0.78rem;
+      font-weight: 600;
       color: var(--text-muted);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.7px;
     }
-    .card h2 {
-      margin: 8px 0 0;
-      font-size: 1.45rem;
+
+    .kpi-card h2 {
+      margin: 10px 0 4px 0;
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #fff;
     }
-    .card small {
+
+    .kpi-card small {
       display: block;
-      margin-top: 4px;
-      font-size: 0.85rem;
+      font-size: 0.84rem;
+      font-weight: 500;
       color: var(--text-muted);
     }
+
+    /* Gráficos */
     .charts-grid {
       display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 16px;
+      grid-template-columns: 2.2fr 1fr;
+      gap: 18px;
     }
-    @media (max-width: 900px) {
+
+    @media (max-width: 960px) {
       .charts-grid {
         grid-template-columns: 1fr;
       }
     }
+
+    .chart-card {
+      background: linear-gradient(180deg, rgba(22, 32, 51, 0.9) 0%, rgba(18, 25, 41, 0.95) 100%);
+      padding: 22px 24px;
+      border-radius: 16px;
+      border: 1px solid var(--border-card);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .chart-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .chart-card-header h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+
     .chart-wrapper {
       position: relative;
-      height: 460px;
+      height: 440px;
+    }
+
+    .chart-wrapper-donut {
+      position: relative;
+      height: 360px;
     }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <div class="header">
-      <h1>Desempenho Comercial & Mix de Clientes</h1>
-      <p id="status">A sincronizar dados com o Google Sheets...</p>
-    </div>
+    <!-- Cabeçalho Institucional -->
+    <header class="top-bar">
+      <div class="brand-title">
+        <div class="brand-badge">DONATA</div>
+        <div class="header-text">
+          <h1>Painel Comercial & Metas</h1>
+          <p id="status-desc">Monitoramento de Vendas e Perfil de Atendimento</p>
+        </div>
+      </div>
+      <div class="live-status">
+        <span class="live-dot"></span>
+        <span id="status">Sincronizado c/ Google Sheets</span>
+      </div>
+    </header>
 
-    <div class="kpi-grid">
-      <div class="card">
+    <!-- Indicadores Principais -->
+    <section class="kpi-grid">
+      <!-- Vendido -->
+      <div class="kpi-card" style="--card-color: #06b6d4;">
         <span>Vendido no Ciclo</span>
-        <h2 id="kpi-vendas" style="color: var(--accent-blue);">R$ 0,00</h2>
+        <h2 id="kpi-vendas" style="color: #38bdf8;">R$ 0,00</h2>
+        <small>Faturamento acumulado</small>
       </div>
-      <div class="card">
+
+      <!-- Falta p/ Meta -->
+      <div class="kpi-card" style="--card-color: #f43f5e;">
         <span>Falta p/ Meta (500k)</span>
-        <h2 id="kpi-falta" style="color: var(--accent-rose);">R$ 0,00</h2>
-        <small id="kpi-progresso">0% atingido</small>
+        <h2 id="kpi-falta" style="color: #fb7185;">R$ 0,00</h2>
+        <small id="kpi-progresso" style="color: #34d399; font-weight: 600;">0% atingido</small>
       </div>
-      <div class="card">
+
+      <!-- Total Clientes -->
+      <div class="kpi-card" style="--card-color: #10b981;">
         <span>Total de Clientes</span>
-        <h2 id="kpi-total-clientes" style="color: var(--text-main);">0</h2>
+        <h2 id="kpi-total-clientes">0</h2>
         <small>Atendimentos somados</small>
       </div>
-      <div class="card">
+
+      <!-- Clientes PJ -->
+      <div class="kpi-card" style="--card-color: #f59e0b;">
         <span>Clientes PJ</span>
-        <h2 id="kpi-pj" style="color: var(--accent-gold);">0</h2>
+        <h2 id="kpi-pj" style="color: #fbbf24;">0</h2>
         <small id="kpi-pj-pct">0% do total</small>
       </div>
-      <div class="card">
+
+      <!-- Clientes PF -->
+      <div class="kpi-card" style="--card-color: #a855f7;">
         <span>Clientes PF</span>
-        <h2 id="kpi-pf" style="color: var(--accent-purple);">0</h2>
+        <h2 id="kpi-pf" style="color: #c084fc;">0</h2>
         <small id="kpi-pf-pct">0% do total</small>
       </div>
-    </div>
+    </section>
 
-    <div class="charts-grid">
-      <div class="card chart-wrapper">
-        <canvas id="graficoVendas"></canvas>
+    <!-- Painéis Visuais -->
+    <main class="charts-grid">
+      <!-- Gráfico de Vendas e Aceleração -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3>Evolução de Vendas vs. Meta Diária & Teto R$ 500k</h3>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="graficoVendas"></canvas>
+        </div>
       </div>
-      <div class="card chart-wrapper">
-        <h3 style="margin: 0 0 16px 0; font-size: 1rem; color: var(--text-muted); text-align: center;">Divisão de Clientes (PJ vs PF)</h3>
-        <canvas id="graficoClientes"></canvas>
+
+      <!-- Gráfico de Clientes Donata -->
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <h3>Carteira: PJ vs. PF</h3>
+        </div>
+        <div class="chart-wrapper-donut">
+          <canvas id="graficoClientes"></canvas>
+        </div>
       </div>
-    </div>
+    </main>
   </div>
 
   <script>
-    // Insira abaixo a URL da sua aplicação Web do Google Apps Script (que termina em /exec)
+    // Cole aqui a sua URL do Apps Script (/exec)
     const API_URL = "https://script.google.com/macros/s/AKfycbwENPPDpgKPLfc_UZqV19b-QW4Ay3ZGuHrWz_O3IcIopcnXL7ZoGxq97DPGFL4p37HYrQ/exec";
     const META_CICLO = 500000.00;
 
@@ -169,35 +334,45 @@
 
         document.getElementById("kpi-vendas").innerText = formatarMoeda(totalVendido);
         document.getElementById("kpi-falta").innerText = formatarMoeda(valorRestante);
-        document.getElementById("kpi-progresso").innerText = percentualAtingido + "% atingido";
+        document.getElementById("kpi-progresso").innerText = percentualAtingido + "% da meta do ciclo";
         
         document.getElementById("kpi-total-clientes").innerText = totalClientes.toLocaleString("pt-BR");
         document.getElementById("kpi-pj").innerText = totalPJ.toLocaleString("pt-BR");
-        document.getElementById("kpi-pj-pct").innerText = pctPJ + "% do total";
+        document.getElementById("kpi-pj-pct").innerText = pctPJ + "% da carteira";
         document.getElementById("kpi-pf").innerText = totalPF.toLocaleString("pt-BR");
-        document.getElementById("kpi-pf-pct").innerText = pctPF + "% do total";
+        document.getElementById("kpi-pf-pct").innerText = pctPF + "% da carteira";
 
-        document.getElementById("status").innerText = "Dados atualizados em tempo real.";
-
+        // Gráfico de Vendas Donata
         const ctxVendas = document.getElementById("graficoVendas").getContext("2d");
+        
+        // Gradiente Ciano Donata para Vendas
+        const gradienteVendas = ctxVendas.createLinearGradient(0, 0, 0, 400);
+        gradienteVendas.addColorStop(0, '#06b6d4');
+        gradienteVendas.addColorStop(1, '#0284c7');
+
+        // Gradiente Verde Bio para Meta Diária
+        const gradienteMeta = ctxVendas.createLinearGradient(0, 0, 0, 400);
+        gradienteMeta.addColorStop(0, 'rgba(16, 185, 129, 0.85)');
+        gradienteMeta.addColorStop(1, 'rgba(5, 150, 105, 0.4)');
+
         new Chart(ctxVendas, {
           data: {
             labels: datas,
             datasets: [
               {
                 type: "bar",
-                label: "Vendas do Dia (R$)",
+                label: "Venda Realizada (R$)",
                 data: vendas,
-                backgroundColor: "#38bdf8",
-                borderRadius: 4,
+                backgroundColor: gradienteVendas,
+                borderRadius: 6,
                 yAxisID: "y"
               },
               {
                 type: "bar",
-                label: "Meta do Dia (R$)",
+                label: "Meta Diária (R$)",
                 data: metasDiarias,
-                backgroundColor: "#fbbf24",
-                borderRadius: 4,
+                backgroundColor: gradienteMeta,
+                borderRadius: 6,
                 yAxisID: "y"
               },
               {
@@ -205,10 +380,15 @@
                 label: "Acumulado no Ciclo (R$)",
                 data: vendasAcumuladas,
                 borderColor: "#34d399",
-                backgroundColor: "rgba(52, 211, 153, 0.1)",
-                borderWidth: 3,
-                tension: 0.25,
-                fill: false,
+                backgroundColor: "rgba(52, 211, 153, 0.08)",
+                borderWidth: 3.5,
+                pointBackgroundColor: "#10b981",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.2,
+                fill: true,
                 yAxisID: "yAcumulado"
               },
               {
@@ -229,8 +409,23 @@
             maintainAspectRatio: false,
             interaction: { mode: "index", intersect: false },
             plugins: {
-              legend: { labels: { color: "#f8fafc", font: { size: 11 } } },
+              legend: {
+                labels: {
+                  color: "#cbd5e1",
+                  font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: 600 },
+                  usePointStyle: true,
+                  padding: 18
+                }
+              },
               tooltip: {
+                backgroundColor: "#0f172a",
+                borderColor: "#334155",
+                borderWidth: 1,
+                titleColor: "#f8fafc",
+                bodyColor: "#f1f5f9",
+                padding: 12,
+                boxPadding: 6,
+                usePointStyle: true,
                 callbacks: {
                   label: function(context) {
                     var label = context.dataset.label || "";
@@ -244,16 +439,20 @@
               }
             },
             scales: {
-              x: { ticks: { color: "#94a3b8" }, grid: { display: false } },
+              x: {
+                ticks: { color: "#94a3b8", font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 } },
+                grid: { display: false }
+              },
               y: {
                 type: "linear",
                 position: "left",
                 beginAtZero: true,
                 ticks: {
                   color: "#94a3b8",
+                  font: { family: "'Plus Jakarta Sans', sans-serif", size: 11 },
                   callback: function(value) { return "R$ " + (value / 1000) + "k"; }
                 },
-                grid: { color: "#334155" }
+                grid: { color: "rgba(51, 65, 85, 0.4)" }
               },
               yAcumulado: {
                 type: "linear",
@@ -262,6 +461,7 @@
                 suggestedMax: 520000,
                 ticks: {
                   color: "#34d399",
+                  font: { family: "'Plus Jakarta Sans', sans-serif", size: 11, weight: 600 },
                   callback: function(value) { return "R$ " + (value / 1000) + "k"; }
                 },
                 grid: { display: false }
@@ -270,6 +470,7 @@
           }
         });
 
+        // Gráfico Donut Donata (PJ vs PF)
         const ctxClientes = document.getElementById("graficoClientes").getContext("2d");
         new Chart(ctxClientes, {
           type: "doughnut",
@@ -277,9 +478,10 @@
             labels: ["Pessoa Jurídica (PJ)", "Pessoa Física (PF)"],
             datasets: [{
               data: [totalPJ, totalPF],
-              backgroundColor: ["#fbbf24", "#a855f7"],
-              borderWidth: 0,
-              hoverOffset: 8
+              backgroundColor: ["#f59e0b", "#a855f7"],
+              borderColor: "#121929",
+              borderWidth: 4,
+              hoverOffset: 10
             }]
           },
           options: {
@@ -288,24 +490,36 @@
             plugins: {
               legend: {
                 position: "bottom",
-                labels: { color: "#f8fafc", padding: 20 }
+                labels: {
+                  color: "#cbd5e1",
+                  font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: 600 },
+                  padding: 24,
+                  usePointStyle: true
+                }
               },
               tooltip: {
+                backgroundColor: "#0f172a",
+                borderColor: "#334155",
+                borderWidth: 1,
+                titleColor: "#f8fafc",
+                bodyColor: "#f1f5f9",
+                padding: 12,
+                boxPadding: 6,
                 callbacks: {
                   label: function(context) {
                     var valor = context.parsed;
                     var pct = totalClientes > 0 ? ((valor / totalClientes) * 100).toFixed(1) : "0";
-                    return " " + context.label + ": " + valor.toLocaleString("pt-BR") + " (" + pct + "%)";
+                    return " " + context.label + ": " + valor.toLocaleString("pt-BR") + " atendimentos (" + pct + "%)";
                   }
                 }
               }
             },
-            cutout: "70%"
+            cutout: "68%"
           }
         });
 
       } catch (erro) {
-        document.getElementById("status").innerText = "Erro ao carregar os dados da API.";
+        document.getElementById("status").innerText = "Erro ao sincronizar dados";
         console.error("Falha:", erro);
       }
     }
