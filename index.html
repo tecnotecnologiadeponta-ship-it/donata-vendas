@@ -20,7 +20,7 @@
     body {
       margin: 0;
       padding: 24px;
-      font-family: system-ui, -apple-system, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-primary);
       color: var(--text-main);
     }
@@ -89,44 +89,40 @@
   <div class="container">
     <div class="header">
       <h1>Desempenho Comercial & Mix de Clientes</h1>
-      <p id="status">Sincronizando dados com Google Sheets...</p>
+      <p id="status">A sincronizar dados com o Google Sheets...</p>
     </div>
 
-    <!-- Indicadores Principais -->
     <div class="kpi-grid">
       <div class="card">
         <span>Vendido no Ciclo</span>
-        <h2 id="kpi-vendas" style="color: var(--accent-blue)">R$ 0,00</h2>
+        <h2 id="kpi-vendas" style="color: var(--accent-blue);">R$ 0,00</h2>
       </div>
       <div class="card">
         <span>Falta p/ Meta (500k)</span>
-        <h2 id="kpi-falta" style="color: var(--accent-rose)">R$ 0,00</h2>
+        <h2 id="kpi-falta" style="color: var(--accent-rose);">R$ 0,00</h2>
         <small id="kpi-progresso">0% atingido</small>
       </div>
       <div class="card">
         <span>Total de Clientes</span>
-        <h2 id="kpi-total-clientes" style="color: var(--text-main)">0</h2>
+        <h2 id="kpi-total-clientes" style="color: var(--text-main);">0</h2>
         <small>Atendimentos somados</small>
       </div>
       <div class="card">
         <span>Clientes PJ</span>
-        <h2 id="kpi-pj" style="color: var(--accent-gold)">0</h2>
+        <h2 id="kpi-pj" style="color: var(--accent-gold);">0</h2>
         <small id="kpi-pj-pct">0% do total</small>
       </div>
       <div class="card">
         <span>Clientes PF</span>
-        <h2 id="kpi-pf" style="color: var(--accent-purple)">0</h2>
+        <h2 id="kpi-pf" style="color: var(--accent-purple);">0</h2>
         <small id="kpi-pf-pct">0% do total</small>
       </div>
     </div>
 
-    <!-- Gráficos -->
     <div class="charts-grid">
-      <!-- Gráfico de Vendas e Meta -->
       <div class="card chart-wrapper">
         <canvas id="graficoVendas"></canvas>
       </div>
-      <!-- Gráfico de Rosca de Clientes PJ vs PF -->
       <div class="card chart-wrapper">
         <h3 style="margin: 0 0 16px 0; font-size: 1rem; color: var(--text-muted); text-align: center;">Divisão de Clientes (PJ vs PF)</h3>
         <canvas id="graficoClientes"></canvas>
@@ -135,28 +131,27 @@
   </div>
 
   <script>
-    // Cole aqui a sua URL do Apps Script (/exec)
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwENPPDpgKPLfc_UZqV19b-QW4Ay3ZGuHrWz_O3IcIopcnXL7ZoGxq97DPGFL4p37HYrQ/exec
-';
+    // Insira abaixo a URL da sua aplicação Web do Google Apps Script (que termina em /exec)
+    const API_URL = "https://script.google.com/macros/s/AKfycbwENPPDpgKPLfc_UZqV19b-QW4Ay3ZGuHrWz_O3IcIopcnXL7ZoGxq97DPGFL4p37HYrQ/exec";
     const META_CICLO = 500000.00;
 
-    const formatarMoeda = (valor) => 
-      valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    function formatarMoeda(valor) {
+      return Number(valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
 
     async function carregarDashboard() {
       try {
         const response = await fetch(API_URL);
         const dados = await response.json();
 
-        const datas = dados.map(item => item.data);
-        const vendas = dados.map(item => item.vendas);
-        const metasDiarias = dados.map(item => item.meta);
-        const pj = dados.map(item => item.pj);
-        const pf = dados.map(item => item.pf);
+        const datas = dados.map(function(item) { return item.data; });
+        const vendas = dados.map(function(item) { return Number(item.vendas) || 0; });
+        const metasDiarias = dados.map(function(item) { return Number(item.meta) || 0; });
+        const pj = dados.map(function(item) { return Number(item.pj) || 0; });
+        const pf = dados.map(function(item) { return Number(item.pf) || 0; });
 
-        // Cálculos Financeiros
         let somaVendas = 0;
-        const vendasAcumuladas = vendas.map(v => {
+        const vendasAcumuladas = vendas.map(function(v) {
           somaVendas += v;
           return Number(somaVendas.toFixed(2));
         });
@@ -165,100 +160,109 @@
         const valorRestante = Math.max(0, META_CICLO - totalVendido);
         const percentualAtingido = ((totalVendido / META_CICLO) * 100).toFixed(1);
 
-        // Cálculos de Clientes
-        const totalPJ = pj.reduce((acc, v) => acc + v, 0);
-        const totalPF = pf.reduce((acc, v) => acc + v, 0);
+        const totalPJ = pj.reduce(function(acc, v) { return acc + v; }, 0);
+        const totalPF = pf.reduce(function(acc, v) { return acc + v; }, 0);
         const totalClientes = totalPJ + totalPF;
 
-        const pctPJ = totalClientes > 0 ? ((totalPJ / totalClientes) * 100).toFixed(1) : 0;
-        const pctPF = totalClientes > 0 ? ((totalPF / totalClientes) * 100).toFixed(1) : 0;
+        const pctPJ = totalClientes > 0 ? ((totalPJ / totalClientes) * 100).toFixed(1) : "0";
+        const pctPF = totalClientes > 0 ? ((totalPF / totalClientes) * 100).toFixed(1) : "0";
 
-        // Atualização dos Cards
-        document.getElementById('kpi-vendas').innerText = formatarMoeda(totalVendido);
-        document.getElementById('kpi-falta').innerText = formatarMoeda(valorRestante);
-        document.getElementById('kpi-progresso').innerText = `${percentualAtingido}% atingido`;
+        document.getElementById("kpi-vendas").innerText = formatarMoeda(totalVendido);
+        document.getElementById("kpi-falta").innerText = formatarMoeda(valorRestante);
+        document.getElementById("kpi-progresso").innerText = percentualAtingido + "% atingido";
         
-        document.getElementById('kpi-total-clientes').innerText = totalClientes.toLocaleString('pt-BR');
-        document.getElementById('kpi-pj').innerText = totalPJ.toLocaleString('pt-BR');
-        document.getElementById('kpi-pj-pct').innerText = `${pctPJ}% do total`;
-        document.getElementById('kpi-pf').innerText = totalPF.toLocaleString('pt-BR');
-        document.getElementById('kpi-pf-pct').innerText = `${pctPF}% do total`;
+        document.getElementById("kpi-total-clientes").innerText = totalClientes.toLocaleString("pt-BR");
+        document.getElementById("kpi-pj").innerText = totalPJ.toLocaleString("pt-BR");
+        document.getElementById("kpi-pj-pct").innerText = pctPJ + "% do total";
+        document.getElementById("kpi-pf").innerText = totalPF.toLocaleString("pt-BR");
+        document.getElementById("kpi-pf-pct").innerText = pctPF + "% do total";
 
-        document.getElementById('status').innerText = 'Dados atualizados em tempo real.';
+        document.getElementById("status").innerText = "Dados atualizados em tempo real.";
 
-        // 1. Gráfico Misto (Barras + Linha Acumulada)
-        const ctxVendas = document.getElementById('graficoVendas').getContext('2d');
+        const ctxVendas = document.getElementById("graficoVendas").getContext("2d");
         new Chart(ctxVendas, {
           data: {
             labels: datas,
             datasets: [
               {
-                type: 'bar',
-                label: 'Vendas do Dia (R$)',
+                type: "bar",
+                label: "Vendas do Dia (R$)",
                 data: vendas,
-                backgroundColor: '#38bdf8',
+                backgroundColor: "#38bdf8",
                 borderRadius: 4,
-                yAxisID: 'y'
+                yAxisID: "y"
               },
               {
-                type: 'bar',
-                label: 'Meta do Dia (R$)',
+                type: "bar",
+                label: "Meta do Dia (R$)",
                 data: metasDiarias,
-                backgroundColor: '#fbbf24',
+                backgroundColor: "#fbbf24",
                 borderRadius: 4,
-                yAxisID: 'y'
+                yAxisID: "y"
               },
               {
-                type: 'line',
-                label: 'Acumulado no Ciclo (R$)',
+                type: "line",
+                label: "Acumulado no Ciclo (R$)",
                 data: vendasAcumuladas,
-                borderColor: '#34d399',
-                backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                borderColor: "#34d399",
+                backgroundColor: "rgba(52, 211, 153, 0.1)",
                 borderWidth: 3,
                 tension: 0.25,
                 fill: false,
-                yAxisID: 'yAcumulado'
+                yAxisID: "yAcumulado"
               },
               {
-                type: 'line',
-                label: 'Teto R$ 500k',
+                type: "line",
+                label: "Teto R$ 500k",
                 data: Array(datas.length).fill(META_CICLO),
-                borderColor: '#f43f5e',
+                borderColor: "#f43f5e",
                 borderDash: [6, 6],
                 borderWidth: 2,
                 pointRadius: 0,
                 fill: false,
-                yAxisID: 'yAcumulado'
+                yAxisID: "yAcumulado"
               }
             ]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            interaction: { mode: 'index', intersect: false },
+            interaction: { mode: "index", intersect: false },
             plugins: {
-              legend: { labels: { color: '#f8fafc', font: { size: 11 } } }
+              legend: { labels: { color: "#f8fafc", font: { size: 11 } } },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    var label = context.dataset.label || "";
+                    if (label) label += ": ";
+                    if (context.parsed.y !== null) {
+                      label += formatarMoeda(context.parsed.y);
+                    }
+                    return label;
+                  }
+                }
+              }
             },
             scales: {
-              x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+              x: { ticks: { color: "#94a3b8" }, grid: { display: false } },
               y: {
-                type: 'linear',
-                position: 'left',
+                type: "linear",
+                position: "left",
                 beginAtZero: true,
                 ticks: {
-                  color: '#94a3b8',
-                  callback: (value) => 'R$ ' + (value / 1000) + 'k'
+                  color: "#94a3b8",
+                  callback: function(value) { return "R$ " + (value / 1000) + "k"; }
                 },
-                grid: { color: '#334155' }
+                grid: { color: "#334155" }
               },
               yAcumulado: {
-                type: 'linear',
-                position: 'right',
+                type: "linear",
+                position: "right",
                 beginAtZero: true,
                 suggestedMax: 520000,
                 ticks: {
-                  color: '#34d399',
-                  callback: (value) => 'R$ ' + (value / 1000) + 'k'
+                  color: "#34d399",
+                  callback: function(value) { return "R$ " + (value / 1000) + "k"; }
                 },
                 grid: { display: false }
               }
@@ -266,15 +270,14 @@
           }
         });
 
-        // 2. Gráfico de Rosca (PJ vs PF)
-        const ctxClientes = document.getElementById('graficoClientes').getContext('2d');
+        const ctxClientes = document.getElementById("graficoClientes").getContext("2d");
         new Chart(ctxClientes, {
-          type: 'doughnut',
+          type: "doughnut",
           data: {
-            labels: ['Pessoa Jurídica (PJ)', 'Pessoa Física (PF)'],
+            labels: ["Pessoa Jurídica (PJ)", "Pessoa Física (PF)"],
             datasets: [{
               data: [totalPJ, totalPF],
-              backgroundColor: ['#fbbf24', '#a855f7'],
+              backgroundColor: ["#fbbf24", "#a855f7"],
               borderWidth: 0,
               hoverOffset: 8
             }]
@@ -284,26 +287,26 @@
             maintainAspectRatio: false,
             plugins: {
               legend: {
-                position: 'bottom',
-                labels: { color: '#f8fafc', padding: 20 }
+                position: "bottom",
+                labels: { color: "#f8fafc", padding: 20 }
               },
               tooltip: {
                 callbacks: {
                   label: function(context) {
-                    const valor = context.parsed;
-                    const pct = totalClientes > 0 ? ((valor / totalClientes) * 100).toFixed(1) : 0;
-                    return ` ${context.label}: ${valor.toLocaleString('pt-BR')} (${pct}%)`;
+                    var valor = context.parsed;
+                    var pct = totalClientes > 0 ? ((valor / totalClientes) * 100).toFixed(1) : "0";
+                    return " " + context.label + ": " + valor.toLocaleString("pt-BR") + " (" + pct + "%)";
                   }
                 }
               }
             },
-            cutout: '70%'
+            cutout: "70%"
           }
         });
 
       } catch (erro) {
-        document.getElementById('status').innerText = 'Erro ao carregar os dados da API.';
-        console.error('Falha:', erro);
+        document.getElementById("status").innerText = "Erro ao carregar os dados da API.";
+        console.error("Falha:", erro);
       }
     }
 
